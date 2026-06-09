@@ -160,8 +160,13 @@ For a pair $(p, p+g)$ and truncation depth $k$, the certificate is the polynomia
 where $A_{n_j}$ is the set of admissible residues modulo $P_{n_j}$ at depth $j$.
 \end{definition}
 
-The evaluation complexity for gap $g$ is $O(|A_{n}|^2)$ — quadratic in the admissible
-class count, identical to the twin case. The certificate score remains:
+The evaluation complexity for gap $g$ remains $O(|A_{n}|^2)$, identical to the twin case. 
+The quadratic cost arises from computing the product of two admissible class vectors 
+(base class and shifted gap class), but because the constellation is 1-dimensional, 
+no additional dimensions are added. The certificate score remains a simple 
+cross-correlation of admissible classes.
+
+The certificate score remains:
 \begin{equation}
     \mathcal{S}(k) = \lim_{n \to \infty} \frac{\mathcal{C}_{g,k}(p)}{\text{expected density}}.
 \end{equation}
@@ -174,49 +179,94 @@ We conducted primorial-level census analysis for sexy primes $(p, p+6)$ and cous
 $(p, p+4)$ at $n = 6, 7$ with partial $n = 8$ results. The sieve code runs on a standard
 4-core Intel processor (Alder Lake N100) with a 1 GB segmented buffer.
 
+The primary metric analyzed in the ``Observed'' columns below is the stabilization of the 
+Coefficient of Variation (CV) as $n$ increases. RAPF predicts that the Coefficient of 
+Variation should strictly decrease with $n$, confirming that primes are distributing 
+uniformly across all admissible classes (equidistribution) and that variance is suppressed 
+below the Poisson random baseline (hyper-equidistribution). We will show how this CV 
+stabilizes across the different gap families, providing a robust proxy for prime density 
+distribution.
+
 \subsection{Sexy Primes $(p, p+6)$}
 \begin{table}[h]
 \centering
-\begin{tabular}{lcccc}
+\begin{tabular}{ccccc}
 \toprule
-$n$ & $P_n$ & Admissible Classes & Expected & Observed \\
+$n$ & $P_n$ & Admissible Classes & Total Expected & Observed \\
 \midrule
-6 & 30,030 & 4,800 & --- & --- \\
-7 & 510,510 & 72,160 & --- & --- \\
-8 & 9,699,690 & --- & --- & --- \\
+6 & 30,030 & 2,970 & TBD & TBD \\
+7 & 510,510 & 44,550 & TBD & TBD \\
+8 & 9,699,690 & 757,350 & TBD & TBD \\
 \bottomrule
 \end{tabular}
-\caption{Sexy prime admissibility census.}
+\caption{Sexy prime admissibility census. Note: $A_n$ is exactly $2\times$ the twin prime count.}
 \end{table}
 
 \subsection{Cousin Primes $(p, p+4)$}
 \begin{table}[h]
 \centering
-\begin{tabular}{lcccc}
+\begin{tabular}{ccccc}
 \toprule
-$n$ & $P_n$ & Admissible Classes & Expected & Observed \\
+$n$ & $P_n$ & Admissible Classes & Total Expected & Observed \\
 \midrule
-6 & 30,030 & 4,800 & --- & --- \\
-7 & 510,510 & 72,160 & --- & --- \\
-8 & 9,699,690 & --- & --- & --- \\
+6 & 30,030 & 1,485 & TBD & TBD \\
+7 & 510,510 & 22,275 & TBD & TBD \\
+8 & 9,699,690 & 378,675 & TBD & TBD \\
 \bottomrule
 \end{tabular}
-\caption{Cousin prime admissibility census.}
+\caption{Cousin prime admissibility census. Note: $A_n$ matches the twin prime count exactly.}
 \end{table}
 
 %================================================================================
 \section{Proof of Concept: Prime Triplets}
 %================================================================================
 
-The $k = 3$ case introduces new complexity. The admissible class space becomes 2-dimensional:
-the triplet $(p, p+2, p+6)$ requires simultaneous admissibility of all three components.
+\subsection{Triplets $(p, p+2, p+6)$}
 
-The polynomial certificate complexity jumps from $O(|A|^2)$ to $O(|A|^3)$ for triplets,
-but structured evaluation via FFT may reduce this. Early analysis suggests the entropy
-density formulation from Paper 1 adapts to the $k = 3$ geometry with a modified curvature
+The triplet constellation introduces a third prime element, requiring that all three
+residues $r, r+2, r+6$ be simultaneously coprime to $P_n$. This imposes stricter
+admissibility conditions, reducing the number of valid classes dramatically compared
+to the twin-prime case.
+
+Unlike gap-$g$ pairs, the admissible class space for triplets becomes effectively
+two-dimensional: the constraint that three primes must coexist in a fixed arithmetic
+configuration eliminates many residue slots that were available for pairs.
+
+\begin{table}[h]
+\centering
+\caption{Admissible class counts for prime triplets $(p, p+2, p+6)$ and $(p, p+4, p+6)$}
+\begin{tabular}{cccc}
+\toprule
+$n$ & $P_n$ & Admissible Classes & Notes \\
+\midrule
+6 & 30,030 & 640 & Per triplet type \\
+7 & 510,510 & 8,960 & Per triplet type \\
+8 & 9,699,690 & 143,360 & Per triplet type \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Notable structural features:
+\begin{enumerate}
+\item \textbf{Sparsity:} The triplet class count at $n=8$ is only $37.8\%$ of the
+cousin/twin count (143,360 vs. 378,675). This reflects the combinatorial cost of
+requiring three simultaneous primes.
+\item \textbf{Mirror symmetry:} The two triplet configurations $(p, p+2, p+6)$ and
+$(p, p+4, p+6)$ have identical class counts because they are related by the
+transformation $p \mapsto p+2$, which preserves the admissibility constraints
+modulo $P_n$.
+\item \textbf{Growth rate:} The ratio $A_n(\text{triplet})/A_n(\text{twin})$
+decreases with $n$, approaching $e^{-\gamma}/\log\log P_n$ asymptotically.
+\end{enumerate}
+
+The polynomial certificate complexity jumps from $O(|A|^2)$ for pairs to
+$O(|A|^3)$ for triplets, but structured evaluation via FFT-based polynomial
+multiplication may reduce this. Early analysis suggests the entropy density
+formulation from Paper 1 adapts to the $k=3$ geometry with a modified curvature
 parameter.
 
-We present preliminary results at $n = 6$ with full census planned for $n = 7, 8$.
+We present preliminary census results at $n=6$ with full census planned for
+$n=7, 8$.
 
 %================================================================================
 \section{Discussion \& Outlook}
